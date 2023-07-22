@@ -157,7 +157,7 @@ class dump_databases
             $file = sprintf('%s/%s.%s.sql.tar.gz',$this->dump_dir, date('Y-m-d'), $db->database);
             $sqlfile = sprintf('%s/%s.%s.sql',$this->dump_dir, date('Y-m-d'),$db->database);
 
-            // remove old file if exist
+            // remove old file if it exist
             if (file_exists($file) && is_writable($file)) {
                 unlink($file);
                 array_push($this->msgs,sprintf('REMOVED FILE: %s',$file));
