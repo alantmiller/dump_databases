@@ -42,3 +42,10 @@ class DatabaseDump:
             self.log(f"Database dumped to {dump_file}")
         else:
             self.log("Database dump failed")
+
+    def write_log(self):
+        """Write log messages to a file"""
+        log_file = os.path.join(self.db_dump_path, "db_dump.log")
+        with open(log_file, 'w') as file:
+            for msg in self.msgs:
+                file.write(f"{msg}\n")
