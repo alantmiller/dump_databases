@@ -8,15 +8,19 @@ from email.mime.text import MIMEText
 import logging
 
 class DatabaseDump:
-
+    
     def __init__(self, host, database, user, password, mail_server, email_recipient, dump_path):
+        self.host = host
+        self.database = database
+        self.user = user
+        self.password = password
+        self.mail_server = mail_server
+        self.email_recipient = email_recipient
         self.dump_path = dump_path
+
         current_date = datetime.now().strftime('%Y_%m_%d')
         self.db_dump_path = f"{self.dump_path}/db_dump_{self.database}_{current_date}.sql"
-        self.email = email
-        self.database = "my_database"
-        self.user = "my_user"
-        self.password = "my_password"
+
 
         # Configuring the logger
         logging.basicConfig(level=logging.INFO,
@@ -34,6 +38,7 @@ class DatabaseDump:
             logging.info("Database dumped successfully")
         except Exception as e:
             logging.error(f"An error occurred while dumping the database: {str(e)}")
+            self.cleanup_old_dumps()
 
     def compress_db_dump(self):
         """Compress the dumped database"""
@@ -80,7 +85,7 @@ class DatabaseDump:
             logging.info("Database dump deleted successfully")
         except Exception as e:
             logging.error(f"An error occurred while deleting the database dump: {str(e)}")
-
+            
     def cleanup_old_dumps(self):
         # Get the list of all dump files for the database
         dump_files = glob.glob(f"{self.dump_path}/db_dump_{self.database}_*.sql")
