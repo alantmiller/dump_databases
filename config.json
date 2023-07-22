@@ -1,17 +1,20 @@
 {
-    "database": {
-        "host": "localhost",
-        "user": "username",
-        "password": "password",
-        "name": "dbname"
+  "common": {
+    "host": "localhost",
+    "mail_server": "mail_server",
+    "email_recipient": "email_recipient",
+    "dump_path": "/path/to/dump/files"
+  },
+  "databases": [
+    {
+      "database": "database1",
+      "user": "user1",
+      "password": "password1"
     },
-    "paths": {
-        "db_dump_path": "/path/to/db/dump",
-        "log_path": "/path/to/log"
-    },
-    "email": {
-        "admin": "admin@example.com",
-        "subject": "Database Dumps",
-        "from": "sender@example.com"
+    {
+      "database": "database2",
+      "user": "user2",
+      "password": "password2"
     }
+  ]
 }
