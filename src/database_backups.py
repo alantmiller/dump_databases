@@ -20,8 +20,22 @@ class DatabaseBackup:
         self.email_config = global_config["email"]
         self.dump_path = global_config["dump_path"]
         self.dump_options = global_config["dump_options"] 
-
         self.messages = []
+
+        self.ensure_directory_exists(self.dump_path)
+
+    def ensure_directory_exists(self, directory):
+        """
+        Ensure that the specified directory exists.
+        If it doesn't, attempt to create it.
+        """
+        if not os.path.exists(directory):
+            try:
+                os.makedirs(directory)
+                self.messages.append(f"Created directory {directory}")
+            except Exception as e:
+                self.messages.append(f"Error occurred while creating directory {directory}: {str(e)}")
+                raise
 
 
     def dump_db(self):
