@@ -9,8 +9,12 @@ import logging
 
 class DatabaseDump:
 
-    def __init__(self, db_dump_path, email):
-        self.db_dump_path = db_dump_path
+def __init__(self, host, database, user, password, mail_server, email_recipient, dump_path):
+    ...
+    self.dump_path = dump_path
+    current_date = datetime.now().strftime('%Y_%m_%d')
+    self.db_dump_path = f"{self.dump_path}/db_dump_{self.database}_{current_date}.sql"
+
         self.email = email
         self.database = "my_database"
         self.user = "my_user"
