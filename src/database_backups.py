@@ -15,6 +15,7 @@ class DatabaseDump:
         self.log_messages = []
         self.database = "my_database"
         self.user = "my_user"
+        self.password = "my_password"
 
     def write_msg(self, msg):
         """Add a message to the log_messages list and print it"""
@@ -24,11 +25,12 @@ class DatabaseDump:
     def dump_db(self):
         """Perform the database dump"""
         try:
-            command = f'pg_dump -U {self.user} -F c {self.database} > {self.db_dump_path}'
+            command = f'mysqldump -u {self.user} -p{self.password} {self.database} > {self.db_dump_path}'
             subprocess.call(command, shell=True)
             self.write_msg("Database dumped successfully")
         except Exception as e:
             self.write_msg(f"An error occurred while dumping the database: {str(e)}")
+
 
     def compress_db_dump(self):
         """Compress the database dump"""
