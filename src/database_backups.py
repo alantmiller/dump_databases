@@ -43,7 +43,7 @@ class DatabaseBackup:
             self.message_logger.log_error(f"Error occurred while dumping database {self.database}: {str(e)}")
             raise
 
-    def email_db_dump(self):
+    def send_email_notification(self):
         """
         This method sends an email with the database dump using Mailgun's API.
         """
