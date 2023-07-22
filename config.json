@@ -1,1 +1,9 @@
-
+{
+    "mysqldump_cmd": "/usr/bin/mysqldump",
+    "dump_dir": "/var/var/datadumps",
+    "owner": "apache",
+    "group": "apache",
+    "email_from": "computer@foo.com",
+    "email_admin": "admin@foo.com",
+    "host": "localhost"
+}
