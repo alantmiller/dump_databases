@@ -4,32 +4,39 @@ import subprocess
 import smtplib
 import glob
 
-class DatabaseDump:
-    """
-    This class handles operations related to database dump,
-    including creating a dump, compressing the dump, sending an email with the dump, and deleting the dump.
-    """
+class DatabaseBackup:
     def __init__(self, config):
-        self.host = config['host']
-        self.database = config['database']
-        self.user = config['user']
-        self.password = config['password']
-        self.mail_server = config['mail_server']
-        self.email_recipient = config['email_recipient']
-        self.dump_path = config['dump_path']
+        """
+        Initialize with the host, database name, username, password, mail server, recipient email and dump path
+        """
+        self.host = config["host"]
+        self.database = config["database"]
+        self.user = config["user"]
+        self.password = config["password"]
+        self.mail_server = config["mail_server"]
+        self.email_recipient = config["email_recipient"]
+        self.dump_path = config["dump_path"]
+        self.options = ['--complete-insert', '--routines', '--triggers', '--single-transaction', '--skip-lock-tables']
+
         self.messages = []
 
-    def dump_db(self):
-        # Build the command for dumping the database
-        command = f"mysqldump -h {self.host} -u {self.user} -p{self.password} {self.database} > {self.dump_path}/{self.database}.sql"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-        # If the command was successful, log the success message
-        # Otherwise, log the error message
-        if result.returncode == 0:
-            self.messages.append(f"Successfully dumped {self.database}")
-        else:
-            self.messages.append(f"Error dumping {self.database}: {result.stderr}")
+    def dump_db(self):
+        """
+        Method to dump the database.
+        """
+        try:
+            # Create a command to dump the database
+            dump_command = f"mysqldump {' '.join(self.options)} -h {self.host} -u {self.user} -p{self.password} {self.database} > {self.dump_path}/{self.database}.sql"
+
+            # Execute the dump command
+            os.system(dump_command)
+
+            self.log_and_print(f"Database {self.database} dumped successfully.")
+
+        except Exception as e:
+            self.log_and_print(f"An error occurred while dumping the database: {str(e)}")
+
 
     def compress_db_dump(self):
         command = f"gzip {self.dump_path}/{self.database}.sql"
