@@ -26,6 +26,21 @@ class DatabaseDump:
         self.email_from = self.config["email"]["from"]
         self.msgs = []
 
+
+    def run(self):
+        """Run the database dump process"""
+        try:
+            self.write_msg("Starting database dump process...")
+            self.dump_db()
+            self.compress_db_dump()
+            self.write_msg("Database dump process completed successfully!")
+        except Exception as e:
+            self.write_msg(f"An error occurred: {str(e)}")
+        finally:
+            self.write_log()
+            self.send_email()
+            
+
     def log(self, msg):
         """Log a message to the list of messages"""
         self.msgs.append(msg)
@@ -49,3 +64,16 @@ class DatabaseDump:
         with open(log_file, 'w') as file:
             for msg in self.msgs:
                 file.write(f"{msg}\n")
+
+    def send_email(self):
+        """Send an email with the log file"""
+        print(f"Sending an email with the log file {os.path.join(self.db_dump_path, 'db_dump.log')} to {self.email}")
+
+
+
+# create an instance of the class
+db_dump = DatabaseDump(db_dump_path="/path/to/db_dump", email="user@example.com")
+
+# start the process
+db_dump.run()
+
