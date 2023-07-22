@@ -4,7 +4,7 @@
         "server": "smtp.example.com",
         "recipient": "your_email@example.com"
     },
-    "dumps_path": "/path/to/your/dumps",
+    "dump_path": "/path/to/your/dumps",
     "dump_options": ["--complete-insert", "--routines", "--triggers", "--single-transaction", "--skip-lock-tables"],
     "databases": [
         {
