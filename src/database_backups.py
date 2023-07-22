@@ -43,16 +43,6 @@ class DatabaseBackup:
             self.message_logger.log_error(f"Error occurred while dumping database {self.database}: {str(e)}")
             raise
 
-
-    def compress_db_dump(self):
-        command = f"gzip {self.dump_path}/{self.database}.sql"
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            self.messages.append(f"Successfully compressed {self.database}")
-        else:
-            self.messages.append(f"Error compressing {self.database}: {result.stderr}")
-
     def email_db_dump(self):
         email_body = '\n'.join(self.messages)
         message = f"Subject: DB Dump Report\n\n{email_body}"
@@ -72,7 +62,6 @@ class DatabaseBackup:
 
     def process(self):
         self.dump_db()
-        self.compress_db_dump()
         self.email_db_dump()
         self.manage_db_dumps()
 
