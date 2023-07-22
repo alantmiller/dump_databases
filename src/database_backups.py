@@ -4,6 +4,8 @@ import subprocess
 import smtplib
 import glob
 from datetime import datetime
+import requests
+
 
 class DatabaseBackup:
     
@@ -37,10 +39,10 @@ class DatabaseBackup:
                 gzip_process = subprocess.Popen(gzip_command, stdin=mysqldump_process.stdout, stdout=dump_file)
                 mysqldump_process.stdout.close()  # Allow mysqldump_process to receive a SIGPIPE if gzip_process exits
                 gzip_process.communicate()  # Blocks until process completes
-            self.message_logger.log_info(f"Database {self.database} dumped successfully to {dump_file_path}")
+            self.messages.append(f"Database {self.database} dumped successfully to {dump_file_path}")
             self.dump_file_path = dump_file_path
         except Exception as e:
-            self.message_logger.log_error(f"Error occurred while dumping database {self.database}: {str(e)}")
+            self.messages.append(f"Error occurred while dumping database {self.database}: {str(e)}")
             raise
 
     def manage_db_dumps(self):
@@ -82,7 +84,7 @@ def send_email_notification(config, messages):
 
     # Set the headers for email API authentication
     headers = {
-        'Authorization': f'Basic {config['email']['apiKey']}'
+        'Authorization': f'Bearer {config['email']['apiKey']}'
     }
 
     # Set the email data
