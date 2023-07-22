@@ -1,21 +1,22 @@
 {
-  "common": {
     "host": "localhost",
-    "mail_server": "mail_server",
-    "email_recipient": "email_recipient",
-    "dump_path": "/path/to/dump/files"
-    "dump_options": ["--complete-insert", "--routines", "--triggers", "--single-transaction", "--skip-lock-tables"],
-  },
-  "databases": [
-    {
-      "database": "database1",
-      "user": "user1",
-      "password": "password1"
+    "email": {
+        "server": "smtp.example.com",
+        "recipient": "your_email@example.com"
     },
-    {
-      "database": "database2",
-      "user": "user2",
-      "password": "password2"
-    }
-  ]
+    "dumps_path": "/path/to/your/dumps",
+    "dump_options": ["--complete-insert", "--routines", "--triggers", "--single-transaction", "--skip-lock-tables"],
+    "databases": [
+        {
+            "name": "database1",
+            "user": "user1",
+            "password": "password1"
+        },
+        {
+            "name": "database2",
+            "user": "user2",
+            "password": "password2"
+        }
+        // add more databases as needed
+    ]
 }
