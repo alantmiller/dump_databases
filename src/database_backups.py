@@ -1,31 +1,71 @@
 import os
-import json
 import smtplib
+import gzip
+import shutil
+import subprocess
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import subprocess
-import shlex
+import logging
 
 class DatabaseDump:
 
-    def __init__(self, config_file):
-        """Initialize the class with configuration settings"""
-        # Read the configuration file
-        with open(config_file, "r") as file:
-            self.config = json.load(file)
-        
-        # Setup variables based on configuration
-        self.db_host = self.config["database"]["host"]
-        self.db_user = self.config["database"]["user"]
-        self.db_password = self.config["database"]["password"]
-        self.db_name = self.config["database"]["name"]
-        self.db_dump_path = self.config["paths"]["db_dump_path"]
-        self.log_path = self.config["paths"]["log_path"]
-        self.email_admin = self.config["email"]["admin"]
-        self.email_subject = self.config["email"]["subject"]
-        self.email_from = self.config["email"]["from"]
-        self.msgs = []
+    def __init__(self, db_dump_path, email):
+        self.db_dump_path = db_dump_path
+        self.email = email
+        self.log_messages = []
+        self.database = "my_database"
+        self.user = "my_user"
 
+    def write_msg(self, msg):
+        """Add a message to the log_messages list and print it"""
+        self.log_messages.append(msg)
+        print(msg)
+
+    def dump_db(self):
+        """Perform the database dump"""
+        try:
+            command = f'pg_dump -U {self.user} -F c {self.database} > {self.db_dump_path}'
+            subprocess.call(command, shell=True)
+            self.write_msg("Database dumped successfully")
+        except Exception as e:
+            self.write_msg(f"An error occurred while dumping the database: {str(e)}")
+
+    def compress_db_dump(self):
+        """Compress the database dump"""
+        try:
+            with open(self.db_dump_path, 'rb') as f_in:
+                with gzip.open(self.db_dump_path + '.gz', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            self.write_msg("Database dump compressed successfully")
+        except Exception as e:
+            self.write_msg(f"An error occurred while compressing the database dump: {str(e)}")
+
+    def write_log(self):
+        """Write the log messages to a file"""
+        try:
+            logging.basicConfig(filename='db_dump.log', level=logging.INFO)
+            for msg in self.log_messages:
+                logging.info(msg)
+            self.write_msg("Log written successfully")
+        except Exception as e:
+            self.write_msg(f"An error occurred while writing the log: {str(e)}")
+
+    def send_email(self):
+        """Send an email with the log messages"""
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = self.email
+            msg['To'] = self.email
+            msg['Subject'] = "Database Dump Log"
+            body = "\n".join(self.log_messages)
+            msg.attach(MIMEText(body, 'plain'))
+            server = smtplib.SMTP('localhost')
+            text = msg.as_string()
+            server.sendmail(self.email, self.email, text)
+            server.quit()
+            self.write_msg("Email sent successfully")
+        except Exception as e:
+            self.write_msg(f"An error occurred while sending the email: {str(e)}")
 
     def run(self):
         """Run the database dump process"""
@@ -39,41 +79,9 @@ class DatabaseDump:
         finally:
             self.write_log()
             self.send_email()
-            
-
-    def log(self, msg):
-        """Log a message to the list of messages"""
-        self.msgs.append(msg)
-
-    def dump_database(self):
-        """Dump the database to a file"""
-        dump_file = os.path.join(self.db_dump_path, f"{self.db_name}.sql")
-        dump_command = f"mysqldump -h {self.db_host} -u {self.db_user} -p{self.db_password} {self.db_name} > {dump_file}"
-
-        # Use a subprocess to run the dump command
-        process = subprocess.run(shlex.split(dump_command), shell=False)
-        
-        if process.returncode == 0:
-            self.log(f"Database dumped to {dump_file}")
-        else:
-            self.log("Database dump failed")
-
-    def write_log(self):
-        """Write log messages to a file"""
-        log_file = os.path.join(self.db_dump_path, "db_dump.log")
-        with open(log_file, 'w') as file:
-            for msg in self.msgs:
-                file.write(f"{msg}\n")
-
-    def send_email(self):
-        """Send an email with the log file"""
-        print(f"Sending an email with the log file {os.path.join(self.db_dump_path, 'db_dump.log')} to {self.email}")
-
-
 
 # create an instance of the class
 db_dump = DatabaseDump(db_dump_path="/path/to/db_dump", email="user@example.com")
 
 # start the process
 db_dump.run()
-
