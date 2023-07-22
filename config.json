@@ -1,9 +1,17 @@
 {
-    "mysqldump_cmd": "/usr/bin/mysqldump",
-    "dump_dir": "/var/var/datadumps",
-    "owner": "apache",
-    "group": "apache",
-    "email_from": "computer@foo.com",
-    "email_admin": "admin@foo.com",
-    "host": "localhost"
+    "database": {
+        "host": "localhost",
+        "user": "username",
+        "password": "password",
+        "name": "dbname"
+    },
+    "paths": {
+        "db_dump_path": "/path/to/db/dump",
+        "log_path": "/path/to/log"
+    },
+    "email": {
+        "admin": "admin@example.com",
+        "subject": "Database Dumps",
+        "from": "sender@example.com"
+    }
 }
