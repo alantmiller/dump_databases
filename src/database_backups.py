@@ -5,37 +5,43 @@ import smtplib
 import glob
 
 class DatabaseBackup:
-    def __init__(self, config):
+    
+    def __init__(self, config, global_config):
         """
-        Initialize with the host, database name, username, password, mail server, recipient email and dump path
+        Initialize with the host, database name, username, password, mail server, recipient email, dump path and dump options
         """
         self.host = config["host"]
         self.database = config["database"]
         self.user = config["user"]
         self.password = config["password"]
-        self.mail_server = config["mail_server"]
-        self.email_recipient = config["email_recipient"]
-        self.dump_path = config["dump_path"]
-        self.options = ['--complete-insert', '--routines', '--triggers', '--single-transaction', '--skip-lock-tables']
+        self.mail_server = global_config["mail_server"]
+        self.email_recipient = global_config["email_recipient"]
+        self.dump_path = global_config["dump_path"]
+        self.dump_options = global_config["dump_options"] 
 
         self.messages = []
 
 
     def dump_db(self):
         """
-        Method to dump the database.
+        This function dumps the database into a gzip compressed file.
         """
         try:
-            # Create a command to dump the database
-            dump_command = f"mysqldump {' '.join(self.options)} -h {self.host} -u {self.user} -p{self.password} {self.database} > {self.dump_path}/{self.database}.sql"
-
-            # Execute the dump command
-            os.system(dump_command)
-
-            self.log_and_print(f"Database {self.database} dumped successfully.")
-
+            # Here we're adding time to the file name using strftime's %H%M%S for HourMinuteSecond
+            dump_file_path = os.path.join(self.dump_path, f"{self.database}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.sql.gz")
+            with open(dump_file_path, "wb") as dump_file:
+                # Execute the mysqldump command, pipe it to gzip and write the output to a file
+                mysqldump_command = ['mysqldump', '-h', self.host, '-u', self.user, '-p' + self.password, '--databases', self.database] + self.dump_options
+                gzip_command = ['gzip']
+                mysqldump_process = subprocess.Popen(mysqldump_command, stdout=subprocess.PIPE)
+                gzip_process = subprocess.Popen(gzip_command, stdin=mysqldump_process.stdout, stdout=dump_file)
+                mysqldump_process.stdout.close()  # Allow mysqldump_process to receive a SIGPIPE if gzip_process exits
+                gzip_process.communicate()  # Blocks until process completes
+            self.message_logger.log_info(f"Database {self.database} dumped successfully to {dump_file_path}")
+            self.dump_file_path = dump_file_path
         except Exception as e:
-            self.log_and_print(f"An error occurred while dumping the database: {str(e)}")
+            self.message_logger.log_error(f"Error occurred while dumping database {self.database}: {str(e)}")
+            raise
 
 
     def compress_db_dump(self):
