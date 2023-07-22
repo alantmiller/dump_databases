@@ -4,6 +4,7 @@
     "mail_server": "mail_server",
     "email_recipient": "email_recipient",
     "dump_path": "/path/to/dump/files"
+    "options": ["--complete-insert", "--routines", "--triggers", "--single-transaction", "--skip-lock-tables"],
   },
   "databases": [
     {
