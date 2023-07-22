@@ -1,107 +1,82 @@
 import os
-import smtplib
-import gzip
-import shutil
+import json
 import subprocess
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import logging
+import smtplib
+import glob
 
 class DatabaseDump:
-    
-    def __init__(self, host, database, user, password, mail_server, email_recipient, dump_path):
-        self.host = host
-        self.database = database
-        self.user = user
-        self.password = password
-        self.mail_server = mail_server
-        self.email_recipient = email_recipient
-        self.dump_path = dump_path
-
-        current_date = datetime.now().strftime('%Y_%m_%d')
-        self.db_dump_path = f"{self.dump_path}/db_dump_{self.database}_{current_date}.sql"
-
-
-        # Configuring the logger
-        logging.basicConfig(level=logging.INFO,
-                            format='%(asctime)s - %(levelname)s - %(message)s',
-                            handlers=[
-                                logging.FileHandler('db_dump.log'),
-                                logging.StreamHandler()
-                            ])
+    """
+    This class handles operations related to database dump,
+    including creating a dump, compressing the dump, sending an email with the dump, and deleting the dump.
+    """
+    def __init__(self, config):
+        self.host = config['host']
+        self.database = config['database']
+        self.user = config['user']
+        self.password = config['password']
+        self.mail_server = config['mail_server']
+        self.email_recipient = config['email_recipient']
+        self.dump_path = config['dump_path']
+        self.messages = []
 
     def dump_db(self):
-        """Perform the database dump"""
-        try:
-            command = f'mysqldump -u {self.user} -p{self.password} {self.database} > {self.db_dump_path}'
-            subprocess.call(command, shell=True)
-            logging.info("Database dumped successfully")
-        except Exception as e:
-            logging.error(f"An error occurred while dumping the database: {str(e)}")
-            self.cleanup_old_dumps()
+        # Build the command for dumping the database
+        command = f"mysqldump -h {self.host} -u {self.user} -p{self.password} {self.database} > {self.dump_path}/{self.database}.sql"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+        # If the command was successful, log the success message
+        # Otherwise, log the error message
+        if result.returncode == 0:
+            self.messages.append(f"Successfully dumped {self.database}")
+        else:
+            self.messages.append(f"Error dumping {self.database}: {result.stderr}")
 
     def compress_db_dump(self):
-        """Compress the dumped database"""
-        try:
-            with open(self.db_dump_path, 'rb') as f_in:
-                with gzip.open(self.db_dump_path + '.gz', 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            logging.info("Database dump compressed successfully")
-        except Exception as e:
-            logging.error(f"An error occurred while compressing the database dump: {str(e)}")
+        command = f"gzip {self.dump_path}/{self.database}.sql"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            self.messages.append(f"Successfully compressed {self.database}")
+        else:
+            self.messages.append(f"Error compressing {self.database}: {result.stderr}")
 
     def email_db_dump(self):
-        """Email the compressed database dump"""
-        try:
-            msg = MIMEMultipart()
-            msg['From'] = 'my_email@example.com'
-            msg['To'] = self.email
-            msg['Subject'] = 'Database Dump'
+        email_body = '\n'.join(self.messages)
+        message = f"Subject: DB Dump Report\n\n{email_body}"
 
-            text = MIMEText('Please find attached the latest database dump.')
-            msg.attach(text)
+        server = smtplib.SMTP(self.mail_server)
+        server.sendmail('sender@example.com', self.email_recipient, message)
+        server.quit()
 
-            # Connect to the mail server
-            server = smtplib.SMTP('my_smtp_server.com', 587)
-            server.starttls()
+        self.messages.append(f"Email sent to {self.email_recipient}")
 
-            # Login Credentials for sending the mail
-            password = "my_email_password"
-            server.login(msg['From'], password)
+    def manage_db_dumps(self):
+        all_dumps = sorted(glob.glob(f"{self.dump_path}/{self.database}*"))
+        while len(all_dumps) > 5:
+            os.remove(all_dumps[0])
+            all_dumps = all_dumps[1:]
+            self.messages.append(f"Removed excess dump file for {self.database}")
 
-            # Send the message
-            text = msg.as_string()
-            server.sendmail(msg['From'], msg['To'], text)
-            server.quit()
-
-            logging.info("Database dump emailed successfully")
-        except Exception as e:
-            logging.error(f"An error occurred while emailing the database dump: {str(e)}")
-
-    def delete_db_dump(self):
-        """Delete the local database dump"""
-        try:
-            os.remove(self.db_dump_path)
-            logging.info("Database dump deleted successfully")
-        except Exception as e:
-            logging.error(f"An error occurred while deleting the database dump: {str(e)}")
-            
-    def cleanup_old_dumps(self):
-        # Get the list of all dump files for the database
-        dump_files = glob.glob(f"{self.dump_path}/db_dump_{self.database}_*.sql")
-
-        # Sort the files by creation date
-        dump_files.sort(key=os.path.getctime)
-
-        # If more than 5 files, delete the oldest ones
-        while len(dump_files) > 5:
-            os.remove(dump_files[0])
-            del dump_files[0]
+    def process(self):
+        self.dump_db()
+        self.compress_db_dump()
+        self.email_db_dump()
+        self.manage_db_dumps()
 
 
+def process_databases(config_file_path):
+    """
+    This function reads the JSON config file and processes each database.
+    """
+    # Load the config file
+    with open(config_file_path) as f:
+        config = json.load(f)
+
+    # Loop over each database config and process the database
+    for db_config in config['databases']:
+        db_dump = DatabaseDump(db_config)
+        db_dump.process()
+
+# This is the entry point of the script
 if __name__ == '__main__':
-    db_dump = DatabaseDump('/path/to/your/db_dump.sql', 'your_email@example.com')
-    db_dump.dump_db()
-    db_dump.compress_db_dump()
-    db_dump.email_db_dump()
-    db_dump.delete_db_dump()
+    process_databases('config.json')
