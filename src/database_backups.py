@@ -25,3 +25,20 @@ class DatabaseDump:
         self.email_subject = self.config["email"]["subject"]
         self.email_from = self.config["email"]["from"]
         self.msgs = []
+
+    def log(self, msg):
+        """Log a message to the list of messages"""
+        self.msgs.append(msg)
+
+    def dump_database(self):
+        """Dump the database to a file"""
+        dump_file = os.path.join(self.db_dump_path, f"{self.db_name}.sql")
+        dump_command = f"mysqldump -h {self.db_host} -u {self.db_user} -p{self.db_password} {self.db_name} > {dump_file}"
+
+        # Use a subprocess to run the dump command
+        process = subprocess.run(shlex.split(dump_command), shell=False)
+        
+        if process.returncode == 0:
+            self.log(f"Database dumped to {dump_file}")
+        else:
+            self.log("Database dump failed")
