@@ -43,36 +43,6 @@ class DatabaseBackup:
             self.message_logger.log_error(f"Error occurred while dumping database {self.database}: {str(e)}")
             raise
 
-    def send_email_notification(self):
-        """
-        This method sends an email with the database dump using Mailgun's API.
-        """
-        email_body = '\n'.join(self.messages)
-
-        # Construct the base URL for email API
-        base_url = f"{self.email_config['apiBaseUrl']}/{self.email_config['domain']}"
-
-        # Set the headers for email API authentication
-        headers = {
-            'Authorization': f'Basic {self.email_config['apiKey']}'
-        }
-
-        # Set the email data
-        data = {
-            'from': 'sender@example.com',
-            'to': self.email_recipient,
-            'subject': 'DB Dump Report',
-            'text': email_body,
-        }
-
-        # Send the email
-        response = requests.post(base_url + '/messages', headers=headers, data=data)
-
-        if response.status_code == 200:
-            self.messages.append(f"Email sent to {self.email_recipient}")
-        else:
-            self.messages.append(f"Failed to send email: {response.content}")
-
     def manage_db_dumps(self):
         all_dumps = sorted(glob.glob(f"{self.dump_path}/{self.database}*"))
         while len(all_dumps) > 5:
@@ -102,6 +72,34 @@ def process_databases(config_file_path):
         
     # After processing all databases, send a single email notification
     send_email_notification(config, all_messages)
+
+def send_email_notification(config, messages):
+    """
+    This function sends an email with the summary of all databases using Mailgun's API.
+    """
+    # Construct the base URL for email API
+    base_url = f"{config['email']['apiBaseUrl']}/{config['email']['domain']}"
+
+    # Set the headers for email API authentication
+    headers = {
+        'Authorization': f'Basic {config['email']['apiKey']}'
+    }
+
+    # Set the email data
+    data = {
+        'from': 'sender@example.com',
+        'to': 'recipient@example.com', # replace with your recipient email
+        'subject': 'DB Dump Report',
+        'text': '\n'.join(messages),
+    }
+
+    # Send the email
+    response = requests.post(base_url + '/messages', headers=headers, data=data)
+
+    if response.status_code == 200:
+        print(f"Email sent to {'recipient@example.com'}")
+    else:
+        print(f"Failed to send email: {response.content}")
 
 # This is the entry point of the script
 if __name__ == '__main__':
