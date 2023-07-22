@@ -1,22 +1,29 @@
 {
+  "environment": "development",
+  "email": {
+    "provider": "Mailgun",
+    "apiBaseUrl": "https://api.mailgun.net/v3",
+    "domain": "your-domain.com",
+    "apiKey": "your-api-key"
+  },
+  "db": {
     "host": "localhost",
-    "email": {
-        "server": "smtp.example.com",
-        "recipient": "your_email@example.com"
-    },
-    "dump_path": "/path/to/your/dumps",
-    "dump_options": ["--complete-insert", "--routines", "--triggers", "--single-transaction", "--skip-lock-tables"],
+    "port": 3306,
+    "protocol": "mysql",
     "databases": [
-        {
-            "name": "database1",
-            "user": "user1",
-            "password": "password1"
-        },
-        {
-            "name": "database2",
-            "user": "user2",
-            "password": "password2"
-        }
-        // add more databases as needed
+      {
+        "name": "database1",
+        "user": "user1",
+        "password": "password1"
+      },
+      {
+        "name": "database2",
+        "user": "user2",
+        "password": "password2"
+      }
+      // add more databases as needed
     ]
+  },
+  "dump_path": "/path/to/your/dumps",
+  "dump_options": ["--complete-insert", "--routines", "--triggers", "--single-transaction", "--skip-lock-tables"]
 }
