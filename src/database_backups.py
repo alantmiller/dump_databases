@@ -82,7 +82,7 @@ class DatabaseBackup:
 
     def process(self):
         self.dump_db()
-        self.email_db_dump()
+        self.send_email_notification() 
         self.manage_db_dumps()
 
 
