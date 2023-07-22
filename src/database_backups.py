@@ -75,8 +75,8 @@ def process_databases(config_file_path):
         config = json.load(f)
 
     # Loop over each database config and process the database
-    for db_config in config['databases']:
-        db_dump = DatabaseDump(db_config)
+    for db_config in config['db']['databases']:
+        db_dump = DatabaseBackup(db_config, config)
         db_dump.process()
 
 # This is the entry point of the script
