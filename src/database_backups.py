@@ -9,12 +9,10 @@ import logging
 
 class DatabaseDump:
 
-def __init__(self, host, database, user, password, mail_server, email_recipient, dump_path):
-    ...
-    self.dump_path = dump_path
-    current_date = datetime.now().strftime('%Y_%m_%d')
-    self.db_dump_path = f"{self.dump_path}/db_dump_{self.database}_{current_date}.sql"
-
+    def __init__(self, host, database, user, password, mail_server, email_recipient, dump_path):
+        self.dump_path = dump_path
+        current_date = datetime.now().strftime('%Y_%m_%d')
+        self.db_dump_path = f"{self.dump_path}/db_dump_{self.database}_{current_date}.sql"
         self.email = email
         self.database = "my_database"
         self.user = "my_user"
@@ -82,6 +80,18 @@ def __init__(self, host, database, user, password, mail_server, email_recipient,
             logging.info("Database dump deleted successfully")
         except Exception as e:
             logging.error(f"An error occurred while deleting the database dump: {str(e)}")
+
+    def cleanup_old_dumps(self):
+        # Get the list of all dump files for the database
+        dump_files = glob.glob(f"{self.dump_path}/db_dump_{self.database}_*.sql")
+
+        # Sort the files by creation date
+        dump_files.sort(key=os.path.getctime)
+
+        # If more than 5 files, delete the oldest ones
+        while len(dump_files) > 5:
+            os.remove(dump_files[0])
+            del dump_files[0]
 
 
 if __name__ == '__main__':
