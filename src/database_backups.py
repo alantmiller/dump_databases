@@ -3,19 +3,19 @@ import json
 import subprocess
 import smtplib
 import glob
+from datetime import datetime
 
 class DatabaseBackup:
     
-    def __init__(self, config, global_config):
+    def __init__(self, db_config, global_config):
         """
         Initialize with the host, database name, username, password, mail server, recipient email, dump path and dump options
         """
-        self.host = config["host"]
-        self.database = config["database"]
-        self.user = config["user"]
-        self.password = config["password"]
-        self.mail_server = global_config["mail_server"]
-        self.email_recipient = global_config["email_recipient"]
+        self.host = global_config["db"]["host"]
+        self.database = db_config["name"]
+        self.user = db_config["user"]
+        self.password = db_config["password"]
+        self.email_config = global_config["email"]
         self.dump_path = global_config["dump_path"]
         self.dump_options = global_config["dump_options"] 
 
