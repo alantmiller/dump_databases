@@ -23,6 +23,8 @@ class DatabaseBackup:
         self.messages = []
 
         self.ensure_directory_exists(self.dump_path)
+        self.check_mysqldump()
+        self.check_directory_write_permission(self.dump_path)
 
     def ensure_directory_exists(self, directory):
         """
@@ -37,6 +39,23 @@ class DatabaseBackup:
                 self.messages.append(f"Error occurred while creating directory {directory}: {str(e)}")
                 raise
 
+    def check_mysqldump(self):
+        mysqldump_path = shutil.which('mysqldump')
+        if not mysqldump_path:
+            message = 'mysqldump not found or not executable'
+            self.messages.append(message)
+            raise Exception(message)
+
+    def check_directory_write_permission(self, directory):
+        test_file_path = os.path.join(directory, 'test.txt')
+        try:
+            with open(test_file_path, 'w') as test_file:
+                test_file.write('test')
+            os.remove(test_file_path)  # delete the test file
+        except Exception as e:
+            message = f'Directory {directory} is not writable: {str(e)}'
+            self.messages.append(message)
+            raise Exception(message)    
 
     def dump_db(self):
         """
