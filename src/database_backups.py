@@ -44,14 +44,34 @@ class DatabaseBackup:
             raise
 
     def email_db_dump(self):
+        """
+        This method sends an email with the database dump using Mailgun's API.
+        """
         email_body = '\n'.join(self.messages)
-        message = f"Subject: DB Dump Report\n\n{email_body}"
 
-        server = smtplib.SMTP(self.mail_server)
-        server.sendmail('sender@example.com', self.email_recipient, message)
-        server.quit()
+        # Construct the base URL for email API
+        base_url = f"{self.email_config['apiBaseUrl']}/{self.email_config['domain']}"
 
-        self.messages.append(f"Email sent to {self.email_recipient}")
+        # Set the headers for email API authentication
+        headers = {
+            'Authorization': f'Basic {self.email_config['apiKey']}'
+        }
+
+        # Set the email data
+        data = {
+            'from': 'sender@example.com',
+            'to': self.email_recipient,
+            'subject': 'DB Dump Report',
+            'text': email_body,
+        }
+
+        # Send the email
+        response = requests.post(base_url + '/messages', headers=headers, data=data)
+
+        if response.status_code == 200:
+            self.messages.append(f"Email sent to {self.email_recipient}")
+        else:
+            self.messages.append(f"Failed to send email: {response.content}")
 
     def manage_db_dumps(self):
         all_dumps = sorted(glob.glob(f"{self.dump_path}/{self.database}*"))
