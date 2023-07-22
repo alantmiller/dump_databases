@@ -82,9 +82,8 @@ class DatabaseBackup:
 
     def process(self):
         self.dump_db()
-        self.send_email_notification() 
         self.manage_db_dumps()
-
+        return self.messages
 
 def process_databases(config_file_path):
     """
@@ -94,10 +93,15 @@ def process_databases(config_file_path):
     with open(config_file_path) as f:
         config = json.load(f)
 
+    all_messages = []
     # Loop over each database config and process the database
     for db_config in config['db']['databases']:
         db_dump = DatabaseBackup(db_config, config)
-        db_dump.process()
+        messages = db_dump.process()
+        all_messages.extend(messages)
+        
+    # After processing all databases, send a single email notification
+    send_email_notification(config, all_messages)
 
 # This is the entry point of the script
 if __name__ == '__main__':
