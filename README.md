@@ -1,4 +1,5 @@
-# Python Automated Database Backup Management System
+# PyDBAutoDumper
+## A Python Automated Database Backup Management System
 
 The Python Automated Database Backup Management System is a robust, highly configurable script that automates the process of backing up your mySQL or MariaDB databases. It's designed to be executed as a cron job, making it easy to schedule automatic database backups according to your needs.
 
